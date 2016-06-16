@@ -1,6 +1,6 @@
 set term png size 640,480
 set terminal png medium
-set output "scaling.png"
+set output "scaling-tps.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
 set xlabel "Scaling factor"
@@ -12,5 +12,5 @@ set y2tics
 set y2tics autofreq
 
 plot \
-  "scaling.txt" using 1:3 axis x1y1 title 'TPS' with linespoints,\
-  "scaling.txt" using 1:2 axis x1y2 title 'Database Size' with linespoints
+  "scaling-tps.txt" using 1:3 axis x1y1 title 'TPS' with linespoints,\
+  "scaling-tps.txt" using 1:2 axis x1y2 title 'Database Size' with linespoints
