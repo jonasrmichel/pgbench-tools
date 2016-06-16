@@ -1,0 +1,37 @@
+#!/bin/bash
+
+source ./config
+source ./pg-tools
+
+remove_pg_db "${TESTHOST}"       \
+             "${TESTPORT}"       \
+             "${RESULTDB}"       \
+             "${TESTUSER}"       \
+             "${TESTPASSWORD}"
+
+remove_pg_db "${TESTHOST}"       \
+             "${TESTPORT}"       \
+             "${TESTDB}"         \
+             "${TESTUSER}"       \
+             "${TESTPASSWORD}"
+
+create_pg_db "${TESTHOST}"       \
+             "${TESTPORT}"       \
+             "${RESULTDB}"       \
+             "${TESTUSER}"       \
+             "${TESTPASSWORD}"
+
+create_pg_db "${TESTHOST}"       \
+             "${TESTPORT}"       \
+             "${TESTDB}"         \
+             "${TESTUSER}"       \
+             "${TESTPASSWORD}"
+
+pg_run_sql_file "${RESULTHOST}"       \
+                "${RESULTPORT}"       \
+                "${RESULTDB}"         \
+                "${RESULTUSER}"       \
+                "${RESULTPASSWORD}"   \
+                "init/resultdb.sql"
+
+rm -rf results

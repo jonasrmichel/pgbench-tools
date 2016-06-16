@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # Basic setup options.  If you are running as the postgres user and
 # are using PostgreSQL 8.4 or later, you normally don't need to
@@ -9,14 +11,14 @@ PGBENCHBIN=`which pgbench`
 GNUPLOT=`which gnuplot`
 
 # These values are for pgbench 8.4 and later
-TESTDIR="tests"
+TESTDIR="tests-json"
 
 # Use these values for pgbench 8.3
 #TESTDIR="tests/tests-8.3"
 
 # SKIPINIT should be set to 1 either when simulating a cold cache, or
 # if you are not using the pgbench tables for your test
-SKIPINIT=0
+SKIPINIT=1
 
 # Set TABBED to 1 to use Javascript for a multi-tabbed display format
 TABBED=0
@@ -25,46 +27,32 @@ TABBED=0
 OSDATA=1
 
 # Test/result database connection
-TESTHOST=localhost
-TESTUSER=`whoami`
-TESTPORT=5432
-TESTDB=pgbench
+TESTHOST="127.0.0.1"
+TESTUSER="postgres"
+TESTPASSWORD=""
+TESTPORT="5432"
+TESTDB="pgbench"
 
 RESULTHOST="$TESTHOST"
 RESULTUSER="$TESTUSER"
+RESULTPASSWORD=""
 RESULTPORT="$TESTPORT"
-RESULTDB=results
+RESULTDB="results"
 
 #
-# Main test run customization
+# JSON benchmark setup options
 #
 
-# Set this to a number only when using pgbench 9.0 or later.  This will set
-# the number of worker threads up to this maximum for each client count
-MAX_WORKERS="auto"
-# Blank setting, typically used with earlier pgbench versions
-#MAX_WORKERS=""
+# Set to 1 to initialize JSON benchmark tables
+JSON_INIT=1
 
-SCRIPT="select.sql"
-SCALES="1 10 100 1000"
-SETCLIENTS="1 2 4 8 16 32"
-SETTIMES=3
+# JSON benchmark tables. Each has a different index strategy.
+TABLE_JSON_PLAIN="json_benchmark_plain"
+TABLE_JSON_GIN="json_benchmark_gin"
+TABLE_JSON_JPO="json_benchmark_jpo"
 
-# RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
-# Setting a time instead of a transaction account is only available
-# in 8.4 and later.
-RUNTIME=60
-TOTTRANS=""
+# Set to the JSON table to benchmark
+TEST_JSON_TABLES="$TABLE_JSON_PLAIN $TABLE_JSON_GIN $TABLE_JSON_JPO"
 
-# Use a transaction count instead for 8.3 or earlier
-#RUNTIME=""
-#TOTTRANS=100000
-
-# Starting in the 9.4 pgbench, you can limit the maximum rate.
-# This takes a list like scale and clients
-SETRATES=""
-
-#
-# Parameters for system monitoring code
-#
-DISKLIST="sda"
+JSON_INSERT_FILE="insert-bulk.sql"
+JSON_INSERT_PATH="$TESTDIR/$JSON_INSERT_FILE"

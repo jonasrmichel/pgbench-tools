@@ -55,16 +55,21 @@ def capture(cmd,tag_all=True,tag_when=None):
     pid = p.pid
 
     while True:
-        line = p.stdout.readline()
-        if line == '' and p.poll() != None:
-            break
+        try:
+            line = p.stdout.readline()
+            if line == '' and p.poll() != None:
+                break
 
-        if tag_all:
-            sys.stdout.write("%s\t" % datetime.datetime.now())
-        elif tag_when != None and line.find(tag_when)>=0:
-            sys.stdout.write("%s\n" % datetime.datetime.now())
+            if tag_all:
+                sys.stdout.write("%s\t" % datetime.datetime.now())
+            elif tag_when != None and line.find(tag_when)>=0:
+                sys.stdout.write("%s\n" % datetime.datetime.now())
 
-        sys.stdout.write(line)
+            sys.stdout.write(line)
+
+        except KeyboardInterrupt:
+            os.kill(pid, signal.SIGHUP)
+            sys.exit()
 
     retcode = p.returncode
 

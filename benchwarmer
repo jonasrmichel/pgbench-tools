@@ -1,25 +1,72 @@
 #!/bin/bash
 
-source ./config
-
-# Take clients and rate limit from command line if passed, use defaults
+# Take scale, clients, and rate limit from command line if passed, use defaults
 # otherwise
 
+# Benchmark test
+BENCHMARK="$1"
+
+# JSON benchmark table
+TEST_JSON_TABLE="$2"
+
+# Scale
+if [ ! -z "$3" ]; then
+  SCALE="$3"
+elif [ -z "$SCALE" ]; then
+  SCALE=0
+fi
+
 # Clients
-if [ ! -z "$1" ]; then
-  CLIENTS="$1"
+if [ ! -z "$4" ]; then
+  CLIENTS="$4"
 elif [ -z "$CLIENTS" ]; then
   CLIENTS=4
 fi
 
 # Rate limit
-if [ -n "$2" ]; then
-  RATE="$2"
-  RATEOPT="-R $2 "
+if [ -n "$5" ]; then
+  RATE="$5"
+  RATEOPT="-R $5 "
 else
   RATE="NULL"
   RATEOPT=""
-fi
+fi 
+
+source ./config
+source ./json-tools
+source ./settings/"${BENCHMARK}"
+
+function cleanup_test_run ()
+{
+  # If the previous test ran recently and it did a cleanup, we should
+  # be safe to skip this possibly lengthy step.  "Recently" is defined
+  # as within 10 seconds of when the last test cleanup finished.  There
+  # is some margin for error here, particulary if processing the results
+  # latency log was very time consuming.  The price of making a mistake
+  # is just some extra run-time though, doing a redundant vacuum.  On
+  # databases sizes where the vacuum time is very long, its actually less
+  # likely that the results log is large.  Tests against large database
+  # tend to run slowly.
+  CLEANED=`$RESULTPSQL -A -t -c "SELECT EXISTS(SELECT 1 FROM tests WHERE cleanup IS NOT NULL AND ((now() - end_time) + cleanup) < '100 seconds'::interval ORDER BY test DESC LIMIT 1)"`
+  if [ "$CLEANED" = 'f' ] ; then
+    $TESTPSQL -c "vacuum analyze"
+  else
+    echo "Skipping vacuum, it was recently ran by the last test"
+  fi
+
+  # We want clean stats from the pg_stat_bgwriter, but those won't show up
+  # until after the checkpoint is done.  Wait a bit for the stats to update
+  STARTCHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+  $TESTPSQL -c "checkpoint"
+  echo "Waiting for checkpoint statistics"
+  while [ 1 ] ; do
+    CHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+    if [ "$CHECK" -gt "$STARTCHECK" ] ; then
+      break
+    fi 
+    sleep 1
+  done
+}
 
 # Query the test database and put its background writer statistics into
 # a set of environment variables, probably for use inserting stats into
@@ -116,8 +163,7 @@ else
   fi
 fi
 
-# Determine database scale
-SCALE=0
+# Override scale if the pgbench tables are being used
 if [ "$PGBENCH_TABLES" -eq "1" ] ; then
   SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
 fi
@@ -145,35 +191,22 @@ if [ "$SKIPINIT" -ne "1" ]; then
     $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
   fi
 
-  # If the previous test ran recently and it did a cleanup, we should
-  # be safe to skip this possibly lengthy step.  "Recently" is defined
-  # as within 10 seconds of when the last test cleanup finished.  There
-  # is some margin for error here, particulary if processing the results
-  # latency log was very time consuming.  The price of making a mistake
-  # is just some extra run-time though, doing a redundant vacuum.  On
-  # databases sizes where the vacuum time is very long, its actually less
-  # likely that the results log is large.  Tests against large database
-  # tend to run slowly.
-  CLEANED=`$RESULTPSQL -A -t -c "SELECT EXISTS(SELECT 1 FROM tests WHERE cleanup IS NOT NULL AND ((now() - end_time) + cleanup) < '100 seconds'::interval ORDER BY test DESC LIMIT 1)"`
-  if [ "$CLEANED" = 'f' ] ; then
-    $TESTPSQL -c "vacuum analyze"
+  cleanup_test_run
+fi
+
+# Cleanup JSON benchmark tables if necessary
+if [ "$JSON_INIT" -eq "1" ]; then
+  cleanup_test_run
+fi
+
+# Set the script file name if the SCRIPT parameter is just a prefix.
+if [ "${SCRIPT_IS_PREFIX}" -eq "1" ]; then
+  if [ "${TEST_JSON_TABLE}" = "${TABLE_JSON_GIN}" ] || \
+     [ "${TEST_JSON_TABLE}" = "${TABLE_JSON_JPO}" ]; then
+    SCRIPT="$SCRIPT$SCRIPT_GIN_SUFFIX"
   else
-    echo "Skipping vacuum, it was recently ran by the last test"
-  fi
-
-  # We want clean stats from the pg_stat_bgwriter, but those won't show up
-  # until after the checkpoint is done.  Wait a bit for the stats to update
-  STARTCHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
-  $TESTPSQL -c "checkpoint"
-  echo "Waiting for checkpoint statistics"
-  while [ 1 ] ; do
-    CHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
-    if [ "$CHECK" -gt "$STARTCHECK" ] ; then
-      break
-    fi 
-    sleep 1
-  done
-
+    SCRIPT="$SCRIPT$SCRIPT_PLAIN_SUFFIX"
+  fi 
 fi
 
 # Create the tests record
@@ -220,7 +253,7 @@ fi
 # Run the main pgbench test
 cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -D json_table=$TEST_JSON_TABLE -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

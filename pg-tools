@@ -1,0 +1,149 @@
+#!/bin/bash
+
+################################################################################
+# function: print messages with process id
+################################################################################
+function process_log()
+{
+   echo "PID: $$ [RUNTIME: $(date +'%m-%d-%y %H:%M:%S')] ${BASENAME}: $*" >&2
+}
+
+
+################################################################################
+# function: exit_on_error
+################################################################################
+function exit_on_error()
+{
+   process_log "ERROR: $*"
+   exit 1
+}
+
+
+################################################################################
+# pg_run_sql_file: send SQL from a file to database
+################################################################################
+function pg_run_sql_file ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_SQLFILE="$6"
+
+   export PGPASSWORD="${F_PGPASSWORD}"
+   psql -qAt -h ${F_PGHOST} -p ${F_PGPORT} -U ${F_PGUSER} \
+                  --single-transaction -d ${F_DBNAME} -f "${F_SQLFILE}"
+}
+
+
+################################################################################
+# pg_run_sql: send SQL to database
+################################################################################
+function pg_run_sql ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_SQL="$6"
+
+   export PGPASSWORD="${F_PGPASSWORD}"
+   psql -qAt -h ${F_PGHOST} -p ${F_PGPORT} -U ${F_PGUSER} \
+                     -d ${F_DBNAME} -c "${F_SQL}"
+}
+
+
+################################################################################
+# function: remove_pgdb (remove postgresql database)
+################################################################################
+function remove_pg_db ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_SQL="DROP DATABASE IF EXISTS ${F_DBNAME};"
+
+   process_log "droping database ${F_DBNAME} if exists."
+   pg_run_sql "${F_PGHOST}" "${F_PGPORT}" "postgres" "${F_PGUSER}" \
+           "${F_PGPASSWORD}" "${F_SQL}" #2>/dev/null >/dev/null
+}
+
+
+################################################################################
+# function: create_pgdb (create postgresql database)
+################################################################################
+function create_pg_db ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_SQL="CREATE DATABASE ${F_DBNAME};"
+
+   process_log "creating database ${F_DBNAME}."
+   pg_run_sql "${F_PGHOST}" "${F_PGPORT}" "postgres" "${F_PGUSER}" \
+           "${F_PGPASSWORD}" "${F_SQL}"
+}
+
+################################################################################
+# function: relation_size (calculate postgresql relation size)
+################################################################################
+function pg_relation_size ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_RELATION="$6"
+   typeset -r F_SQL="SELECT pg_catalog.pg_relation_size('${F_RELATION}');"
+
+   process_log "calculating PostgreSQL collection size."
+   pg_run_sql "${F_PGHOST}" "${F_PGPORT}" "${F_DBNAME}" "${F_PGUSER}" \
+           "${F_PGPASSWORD}" "${F_SQL}"
+}
+
+
+################################################################################
+# function: index_size (calculate postgresql index size)
+################################################################################
+function pg_index_size ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_RELATION="$6"
+   typeset -r F_SQL="SELECT pg_catalog.pg_relation_size('${F_RELATION}_idx');"
+
+   process_log "calculating PostgreSQL index size."
+   pg_run_sql "${F_PGHOST}" "${F_PGPORT}" "${F_DBNAME}" "${F_PGUSER}" \
+           "${F_PGPASSWORD}" "${F_SQL}"
+}
+
+
+################################################################################
+# function: check if database exists
+################################################################################
+function if_dbexists ()
+{
+   typeset -r F_PGHOST="$1"
+   typeset -r F_PGPORT="$2"
+   typeset -r F_DBNAME="$3"
+   typeset -r F_PGUSER="$4"
+   typeset -r F_PGPASSWORD="$5"
+   typeset -r F_SQL="SELECT COUNT(1)
+                     FROM pg_catalog.pg_database
+                        WHERE datname='${F_DBNAME}';"
+
+   output=$(pg_run_sql "${F_PGHOST}" "${F_PGPORT}" "postgres" "${F_PGUSER}" \
+                    "${F_PGPASSWORD}" \
+                    "${F_SQL}")
+   echo ${output}
+}

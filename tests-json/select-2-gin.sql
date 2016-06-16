@@ -1,0 +1,1 @@
+SELECT data FROM :json_table WHERE data @> '{"name": "Phone Service Basic Plan"}';

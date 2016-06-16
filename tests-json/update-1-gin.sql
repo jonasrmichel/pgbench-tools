@@ -1,0 +1,1 @@
+UPDATE :json_table SET data = jsonb_set(data, '{price}', to_jsonb((data->>'price')::int + 100)) WHERE data @> '{"brand": "ACME"}';

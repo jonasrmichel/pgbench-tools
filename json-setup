@@ -1,0 +1,72 @@
+#!/bin/bash
+
+source ./config
+source ./json-tools
+
+function create_benchmark_table ()
+{
+  local TABLE="$1"
+  mk_pg_json_collection "${TESTHOST}"      \
+                        "${TESTPORT}"      \
+                        "${TESTDB}"        \
+                        "${TESTUSER}"      \
+                        "${TESTPASSWORD}"  \
+                        "${TABLE}"
+}
+
+function create_benchmark_tables ()
+{
+  create_benchmark_table "${TABLE_JSON_PLAIN}"
+  create_benchmark_table "${TABLE_JSON_GIN}"
+  create_benchmark_table "${TABLE_JSON_JPO}"
+}
+
+function create_benchmark_index ()
+{
+  local INDEX_FUNCTION="$1"
+  local TABLE="$2"
+  ${INDEX_FUNCTION} "${TESTHOST}"      \
+                    "${TESTPORT}"      \
+                    "${TESTDB}"        \
+                    "${TESTUSER}"      \
+                    "${TESTPASSWORD}"  \
+                    "${TABLE}"
+
+}
+
+function create_benchmark_index_gin ()
+{
+  local TABLE="$1"
+  create_benchmark_index "pg_create_gin_index_collection" "${TABLE}"
+}
+
+function create_benchmark_index_jpo ()
+{
+  local TABLE="$1"
+  create_benchmark_index "pg_create_jpo_index_collection" "${TABLE}"
+}
+
+function create_benchmark_indexes ()
+{
+  create_benchmark_index_gin "${TABLE_JSON_GIN}"
+  create_benchmark_index_jpo "${TABLE_JSON_JPO}"
+}
+
+function generate_benchmark_data ()
+{
+  local TABLE="$1"
+  local SCALE="$2"
+  pg_json_insert_maker "${TABLE}"                    \
+                       "${SCALE}"                    \
+                       "${JSON_INSERT_PATH}"
+}
+
+function insert_benchmark_data ()
+{
+  pg_run_sql_file "${TESTHOST}"      \
+                  "${TESTPORT}"      \
+                  "${TESTDB}"        \
+                  "${TESTUSER}"      \
+                  "${TESTPASSWORD}"  \
+                  "${JSON_INSERT_PATH}"
+}

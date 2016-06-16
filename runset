@@ -1,6 +1,13 @@
 #!/bin/bash
 
-. ./config
+BENCHMARK="$1"
+
+echo "Begining tests for '${BENCHMARK}' benchmark"
+
+source ./config
+source ./json-tools
+source ./json-setup
+source ./settings/"${BENCHMARK}"
 
 # Confirm we have a useful pgbench to run
 if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
@@ -26,42 +33,74 @@ else
 fi
 
 # Make sure the configured test script actually exists
-if [ ! -f "${TESTDIR}/${SCRIPT}" ]; then
+if [ "${SCRIPT_IS_PREFIX}" -neq "1" ] && \
+   [ "${SCRIPT}" != "${JSON_INSERT_FILE}" ] && \
+   [ ! -f "${TESTDIR}/${SCRIPT}" ]; then
   echo "ERROR: cannot find test script ${TESTDIR}/${SCRIPT}, aborting"
   exit
 fi
 
-for SCALE in $SCALES; do
+for TEST_JSON_TABLE in $TEST_JSON_TABLES; do
   #
-  # Have a consistent, clean set of pgbench tables to start 
-  # each test run with
+  # Create a new test set for this JSON indexing strategy
   #
+  ./newset "${BENCHMARK}_${TEST_JSON_TABLE}"
 
-  if [ "$SKIPINIT" -ne "1" ]; then
-    if [ "$PGBENCH_TABLES" -eq "1" ] ; then
-      echo Removing old pgbench tables
-      $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
-    fi
-    $TESTPSQL -c "vacuum"
-
-    echo Creating new pgbench tables
-    $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
-  fi
-  #
-  # Run the main test
-  #
-  for (( t=1; t<=$SETTIMES; t++ )); do
-    for c in $SETCLIENTS; do
-      if [ -z "$SETRATES" ] ; then
-        echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
-        ./benchwarmer $c
-      else
-        for r in $SETRATES; do
-          echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE rate=$r
-          ./benchwarmer $c $r
-        done 
+  for SCALE in $SCALES; do
+    #
+    # Have a consistent, clean set of pgbench tables to start 
+    # each test run with
+    #
+    if [ "$SKIPINIT" -ne "1" ]; then
+      if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+        echo Removing old pgbench tables
+        $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
       fi
-      echo
+      $TESTPSQL -c "vacuum"
+
+      echo Creating new pgbench tables
+      $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+    fi
+
+    #
+    # Have a consistent, clean JSON benchmark table to start
+    # each test run with
+    #
+    if [ "${JSON_INIT}" -eq "1" ]; then
+      create_benchmark_table "${TEST_JSON_TABLE}"
+      
+      if [ "${TEST_JSON_TABLE}" = "${TABLE_JSON_GIN}" ]; then
+        create_benchmark_index_gin "${TEST_JSON_TABLE}"
+      elif [ "${TEST_JSON_TABLE}" = "${TABLE_JSON_JPO}" ]; then
+        create_benchmark_index_jpo "${TEST_JSON_TABLE}"
+      fi
+      
+      generate_benchmark_data "${TEST_JSON_TABLE}" "${SCALE}"
+
+      #
+      # Insert sample data, but only if we aren't benchmarking inserts
+      #
+      if [ "${SCRIPT}" != "${JSON_INSERT_FILE}" ]; then
+        insert_benchmark_data
+      fi
+    fi 
+
+    #
+    # Run the main test
+    #
+    for (( t=1; t<=$SETTIMES; t++ )); do
+      for c in $SETCLIENTS; do
+        if [ -z "$SETRATES" ] ; then
+          echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
+          ./benchwarmer $BENCHMARK $TEST_JSON_TABLE $SCALE $c
+        else
+          for r in $SETRATES; do
+            echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE rate=$r
+            ./benchwarmer $BENCHMARK $TEST_JSON_TABLE $SCALE $c $r
+          done 
+        fi
+        echo
+      done
     done
   done
 done

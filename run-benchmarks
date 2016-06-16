@@ -1,0 +1,16 @@
+#!/bin/bash
+
+## Experiments ##
+# (all vary JSON index strategy [plain, gin, jpo])
+# insert: varying clients
+# insert-bulk: varying clients, scale
+# select: varying clients, scale
+# update: varying clients, scale
+
+BENCHMARK="$1"
+
+./setup
+
+./runset "$BENCHMARK"
+
+./cleanup

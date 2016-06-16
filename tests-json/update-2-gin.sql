@@ -1,0 +1,1 @@
+UPDATE :json_table SET data = jsonb_set(data, '{limits, data, over_rate}', '10') WHERE data @> '{"type": "service"}';

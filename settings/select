@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#
+# Test run customization for select benchmark.
+#
+
+# Set this to a number only when using pgbench 9.0 or later.  This will set
+# the number of worker threads up to this maximum for each client count
+MAX_WORKERS="auto"
+# Blank setting, typically used with earlier pgbench versions
+#MAX_WORKERS=""
+
+# If set to 1, the SCRIPT will be interpreted as just a prefix of the script
+# file name. The suffix will be chosen based on the JSON index strategy.
+SCRIPT_IS_PREFIX=1
+SCRIPT_PLAIN_SUFFIX="-plain.sql" 
+SCRIPT_GIN_SUFFIX="-gin.sql"
+
+SCRIPT="select-1"
+SCALES="1 10 100 1000 10000 100000 1000000"
+SETCLIENTS="1 2 4 8 16"
+SETTIMES=1
+
+# RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
+# Setting a time instead of a transaction account is only available
+# in 8.4 and later.
+RUNTIME="10"
+#TOTTRANS=10
+
+# Use a transaction count instead for 8.3 or earlier
+#RUNTIME=""
+#TOTTRANS=100000
+
+# Starting in the 9.4 pgbench, you can limit the maximum rate.
+# This takes a list like scale and clients
+SETRATES=""
+
+#
+# Parameters for system monitoring code
+#
+DISKLIST="sda"
