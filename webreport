@@ -18,7 +18,12 @@
 # than the internal font, and LiberationSans looks terrible.
 
 source ./config
-OUTFILE="results/index.htm"
+
+BENCHMARK="$1"
+
+BENCHMARK_RESULTSDIR="$RESULTSDIR/$BENCHMARK"
+
+OUTFILE="$BENCHMARK_RESULTSDIR/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
 # Emulate 'sed -i' behavior from GNU sed with standard sed instead.
@@ -36,33 +41,33 @@ else
   # Produce combined transactions/sec reports, averaged across all test sets
   $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling-tps.txt
   gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
-  mv scaling-tps.png results/
+  mv scaling-tps.png $BENCHMARK_RESULTSDIR/
   rm scaling-tps.txt
 
   $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests group by clients order by clients" > clients-tps.txt
   gnuplot plots/clients-tps.plot 2>&1 | grep -v "Warning: empty"
-  mv clients-tps.png results/
+  mv clients-tps.png $BENCHMARK_RESULTSDIR/
   rm clients-tps.txt
 
   $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d-tps.txt
   gnuplot plots/3d-tps.plot 2>&1 | grep -v "Warning: empty"
-  mv 3d-tps.png results/
+  mv 3d-tps.png $BENCHMARK_RESULTSDIR/
   rm 3d-tps.txt
 
   # Produce combined latency reports, averaged across all test sets
   $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale order by scale" > scaling-latency.txt
   gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
-  mv scaling-latency.png results/
+  mv scaling-latency.png $BENCHMARK_RESULTSDIR/
   rm scaling-latency.txt
 
   $RESULTPSQL -At -F" " -c "select clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by clients order by clients" > clients-latency.txt
   gnuplot plots/clients-latency.plot 2>&1 | grep -v "Warning: empty"
-  mv clients-latency.png results/
+  mv clients-latency.png $BENCHMARK_RESULTSDIR/
   rm clients-latency.txt
 
   $RESULTPSQL -At -F" " -c "select scale,clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale,clients order by scale,clients" > 3d-latency.txt
   gnuplot plots/3d-latency.plot 2>&1 | grep -v "Warning: empty"
-  mv 3d-latency.png results/
+  mv 3d-latency.png $BENCHMARK_RESULTSDIR/
   rm 3d-latency.txt
 fi
 
@@ -109,33 +114,33 @@ for SET in $SETS ; do
     # Generate transaction/sec graphs for just this test set
     $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling-tps.txt
     gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
-    mv scaling-tps.png results/scaling-tps-$SET.png
+    mv scaling-tps.png $BENCHMARK_RESULTSDIR/scaling-tps-$SET.png
     mv scaling-tps.txt scaling-tps-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients-tps.txt
     gnuplot plots/clients-tps.plot 2>&1 | grep -v "Warning: empty"
-    mv clients-tps.png results/clients-tps-$SET.png
+    mv clients-tps.png $BENCHMARK_RESULTSDIR/clients-tps-$SET.png
     mv clients-tps.txt clients-tps-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-tps.txt
     gnuplot plots/3d-tps.plot 2>&1 | grep -v "Warning: empty"
-    mv 3d-tps.png results/3d-tps-$SET.png
+    mv 3d-tps.png $BENCHMARK_RESULTSDIR/3d-tps-$SET.png
     rm 3d-tps.txt
 
     # Generate latency graphs for just this test set
     $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
     gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
-    mv scaling-latency.png results/scaling-latency-$SET.png
+    mv scaling-latency.png $BENCHMARK_RESULTSDIR/scaling-latency-$SET.png
     mv scaling-latency.txt scaling-latency-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by clients order by clients" > clients-latency.txt
     gnuplot plots/clients-latency.plot 2>&1 | grep -v "Warning: empty"
-    mv clients-latency.png results/clients-latency-$SET.png
+    mv clients-latency.png $BENCHMARK_RESULTSDIR/clients-latency-$SET.png
     mv clients-latency.txt clients-latency-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select scale,clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-latency.txt
     gnuplot plots/3d-latency.plot 2>&1 | grep -v "Warning: empty"
-    mv 3d-latency.png results/3d-latency-$SET.png
+    mv 3d-latency.png $BENCHMARK_RESULTSDIR/3d-latency-$SET.png
     rm 3d-latency.txt
   fi
 
@@ -238,10 +243,10 @@ if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   gnuplot multi-client-tps.plot 2>&1 | grep -v "Warning: empty"
   gnuplot multi-scale-latency.plot 2>&1 | grep -v "Warning: empty"
   gnuplot multi-client-latency.plot 2>&1 | grep -v "Warning: empty"
-  mv clients-tps-sets.png results/
-  mv scaling-tps-sets.png results/
-  mv clients-latency-sets.png results/
-  mv scaling-latency-sets.png results/
+  mv clients-tps-sets.png $BENCHMARK_RESULTSDIR/
+  mv scaling-tps-sets.png $BENCHMARK_RESULTSDIR/
+  mv clients-latency-sets.png $BENCHMARK_RESULTSDIR/
+  mv scaling-latency-sets.png $BENCHMARK_RESULTSDIR/
   rm multi-scale-latency.plot
   rm multi-client-latency.plot
 fi

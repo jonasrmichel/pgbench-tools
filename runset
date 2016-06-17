@@ -105,4 +105,4 @@ for TEST_JSON_TABLE in $TEST_JSON_TABLES; do
   done
 done
 
-./webreport
+./webreport "$BENCHMARK"

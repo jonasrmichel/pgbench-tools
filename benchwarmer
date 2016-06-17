@@ -237,23 +237,24 @@ START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 $RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 
 # Setup test directory tree
-echo This is test $TEST
-mkdir -p results/$TEST
+echo This is test $BENCHMARK $TEST
+BENCHMARK_RESULTSDIR="$RESULTSDIR/$BENCHMARK"
+mkdir -p $BENCHMARK_RESULTSDIR/$TEST
 
 # Start background daemon collectors
 if [ "$OSDATA" -eq "1" ]; then
-  ./timed-os-stats vmstat > results/$TEST/vmstat.log &
+  ./timed-os-stats vmstat > $BENCHMARK_RESULTSDIR/$TEST/vmstat.log &
   VMSTAT=$!
-  ./timed-os-stats iostat > results/$TEST/iostat.log &
+  ./timed-os-stats iostat > $BENCHMARK_RESULTSDIR/$TEST/iostat.log &
   IOSTAT=$!
-  ./timed-os-stats meminfo > results/$TEST/meminfo.log &
+  ./timed-os-stats meminfo > $BENCHMARK_RESULTSDIR/$TEST/meminfo.log &
   MEMINFO=$!
 fi
 
 # Run the main pgbench test
-cd results/$TEST
+cd $BENCHMARK_RESULTSDIR/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -D json_table=$TEST_JSON_TABLE -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
+$PGBENCHBIN -f $TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -D json_table=$TEST_JSON_TABLE -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

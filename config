@@ -11,10 +11,13 @@ PGBENCHBIN=`which pgbench`
 GNUPLOT=`which gnuplot`
 
 # These values are for pgbench 8.4 and later
-TESTDIR="tests-json"
+TESTDIR="$BASEDIR/tests-json"
 
 # Use these values for pgbench 8.3
 #TESTDIR="tests/tests-8.3"
+
+# Results directory
+RESULTSDIR="$BASEDIR/results"
 
 # SKIPINIT should be set to 1 either when simulating a cold cache, or
 # if you are not using the pgbench tables for your test
@@ -56,3 +59,7 @@ TEST_JSON_TABLES="$TABLE_JSON_PLAIN $TABLE_JSON_GIN $TABLE_JSON_JPO"
 
 JSON_INSERT_FILE="insert-bulk.sql"
 JSON_INSERT_PATH="$TESTDIR/$JSON_INSERT_FILE"
+
+# Benchmark tests to run.
+##BENCHMARKS="insert-bulk insert select update"
+BENCHMARKS="insert select"
