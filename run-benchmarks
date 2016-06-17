@@ -2,11 +2,8 @@
 
 source ./config
 
-./setup
-
 for BENCHMARK in $BENCHMARKS; do
-  
+  ./setup "$BENCHMARK"
   ./runset "$BENCHMARK"
   ./cleanup
-
 done

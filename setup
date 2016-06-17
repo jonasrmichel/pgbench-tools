@@ -3,29 +3,38 @@
 source ./config
 source ./pg-tools
 
-remove_pg_db "${TESTHOST}"       \
-             "${TESTPORT}"       \
-             "${RESULTDB}"       \
-             "${TESTUSER}"       \
-             "${TESTPASSWORD}"
+# Wait for database to stabilize before starting tests.
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT"
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT"
+
+await_db_ok "$TESTPSQL"
+await_db_ok "$RESULTPSQL"
+
+BENCHMARK="$1"
 
 remove_pg_db "${TESTHOST}"       \
              "${TESTPORT}"       \
-             "${TESTDB}"         \
+             "${TESTDB}"       \
              "${TESTUSER}"       \
              "${TESTPASSWORD}"
 
-create_pg_db "${TESTHOST}"       \
-             "${TESTPORT}"       \
-             "${RESULTDB}"       \
-             "${TESTUSER}"       \
-             "${TESTPASSWORD}"
+remove_pg_db "${RESULTHOST}"       \
+             "${RESULTPORT}"       \
+             "${RESULTDB}"         \
+             "${RESULTUSER}"       \
+             "${RESULTPASSWORD}"
 
 create_pg_db "${TESTHOST}"       \
              "${TESTPORT}"       \
-             "${TESTDB}"         \
+             "${TESTDB}"       \
              "${TESTUSER}"       \
              "${TESTPASSWORD}"
+
+create_pg_db "${RESULTHOST}"       \
+             "${RESULTPORT}"       \
+             "${RESULTDB}"         \
+             "${RESULTUSER}"       \
+             "${RESULTPASSWORD}"
 
 pg_run_sql_file "${RESULTHOST}"       \
                 "${RESULTPORT}"       \
@@ -34,4 +43,5 @@ pg_run_sql_file "${RESULTHOST}"       \
                 "${RESULTPASSWORD}"   \
                 "init/resultdb.sql"
 
-rm -rf results
+BENCHMARK_RESULTSDIR="$RESULTSDIR/$BENCHMARK"
+rm -rf $BENCHMARK_RESULTSDIR

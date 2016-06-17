@@ -1,6 +1,22 @@
 #!/bin/bash
 
 ################################################################################
+# function: wait for database to stabilize
+################################################################################
+function await_db_ok ()
+{
+  local PSQL="$1"
+  while [ 1 ]; do
+    echo "Waiting for database to stabilize..."
+    RES=$($PSQL -At -c "select 0" 2>&1)
+    if [[ $RES != *"FATAL"* ]]; then
+      break
+    fi
+    sleep 1
+  done
+}
+
+################################################################################
 # function: print messages with process id
 ################################################################################
 function process_log()

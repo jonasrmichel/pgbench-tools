@@ -4,4 +4,4 @@ source ./config
 
 if [ "$OSDATA" -eq "1" ]; then
   pkill -f "iostat|vmstat|vm_stat|meminfo"
-fi 
+fi
