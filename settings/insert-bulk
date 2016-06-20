@@ -4,7 +4,7 @@
 # Test run customization for insert-bulk benchmark.
 #
 
-source ../config
+source ./config
 
 # Set this to a number only when using pgbench 9.0 or later.  This will set
 # the number of worker threads up to this maximum for each client count

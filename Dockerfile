@@ -8,4 +8,5 @@ RUN apt-get update \
 ADD . /pgbench-tools/
 
 WORKDIR /pgbench-tools
-CMD ["./run-benchmarks"]
+
+ENTRYPOINT ["./benchmark-entrypoint.sh"]
