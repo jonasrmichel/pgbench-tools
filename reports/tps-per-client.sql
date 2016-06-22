@@ -1,7 +1,9 @@
 SELECT
   set,scale,
-  pg_size_pretty(avg(dbsize)::int8) AS db_size,
-  pg_size_pretty(avg(dbsize)::int8 / scale) AS size_per_scale,
+  pg_size_pretty(avg(table_size)::int8) AS table_size,
+  pg_size_pretty(avg(table_size)::int8 / scale) AS table_size_per_scale,
+  pg_size_pretty(avg(index_size)::int8) AS index_size,
+  pg_size_pretty(avg(index_size)::int8 / scale) AS index_size_per_scale,
   clients,
   round(avg(tps)) as tps,
   round(avg(tps)/clients) as tps_per_client,

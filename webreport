@@ -39,7 +39,7 @@ if [ -z $GNUPLOT ] || [ ! -x $GNUPLOT ]; then
   echo "gnuplot not found, skipping webreport charts generation"
 else
   # Produce combined transactions/sec reports, averaged across all test sets
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling-tps.txt
+  $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(avg(tps)) as tps from tests group by scale order by scale" > scaling-tps.txt
   gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
   mv scaling-tps.png $BENCHMARK_RESULTSDIR/
   rm scaling-tps.txt
@@ -55,7 +55,7 @@ else
   rm 3d-tps.txt
 
   # Produce combined latency reports, averaged across all test sets
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale order by scale" > scaling-latency.txt
+  $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale order by scale" > scaling-latency.txt
   gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
   mv scaling-latency.png $BENCHMARK_RESULTSDIR/
   rm scaling-latency.txt
@@ -112,7 +112,7 @@ for SET in $SETS ; do
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Generate transaction/sec graphs for just this test set
-    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling-tps.txt
+    $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling-tps.txt
     gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
     mv scaling-tps.png $BENCHMARK_RESULTSDIR/scaling-tps-$SET.png
     mv scaling-tps.txt scaling-tps-$SET.txt
@@ -128,7 +128,7 @@ for SET in $SETS ; do
     rm 3d-tps.txt
 
     # Generate latency graphs for just this test set
-    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
+    $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
     gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
     mv scaling-latency.png $BENCHMARK_RESULTSDIR/scaling-latency-$SET.png
     mv scaling-latency.txt scaling-latency-$SET.txt
@@ -232,9 +232,9 @@ for SET in $SETS ; do
     DELIM=",\\"
   fi
 
-  echo  "'scaling-tps-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-tps.plot
+  echo  "'scaling-tps-$SET.txt' using 1:4 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-tps.plot
   echo  "'clients-tps-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client-tps.plot
-  echo  "'scaling-latency-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-latency.plot
+  echo  "'scaling-latency-$SET.txt' using 1:4 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-latency.plot
   echo  "'clients-latency-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client-latency.plot
 done
 

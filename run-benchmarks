@@ -7,3 +7,5 @@ for BENCHMARK in $BENCHMARKS; do
   ./runset "$BENCHMARK"
   ./cleanup
 done
+
+echo "Completed benchmarks: $BENCHMARKS"

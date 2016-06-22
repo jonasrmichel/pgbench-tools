@@ -210,8 +210,7 @@ if [ "${SCRIPT_IS_PREFIX}" -eq "1" ]; then
 fi
 
 # Create the tests record
-DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,dbsize,rate_limit) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
+$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,rate_limit) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE',$RATE)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -257,7 +256,15 @@ echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 $PGBENCHBIN -f $TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -D json_table=$TEST_JSON_TABLE -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
-$RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
+
+TABLE_SIZE=`$TESTPSQL -A -t -c "select pg_total_relation_size('$TEST_JSON_TABLE')"`
+INDEX_SIZE=`$TESTPSQL -A -t -c "select pg_indexes_size('$TEST_JSON_TABLE')"`
+
+echo "test table $TEST_JSON_TABLE"
+echo "table size (bytes): $TABLE_SIZE"
+echo "index size (bytes): $INDEX_SIZE"
+
+$RESULTPSQL -q -c "update tests set table_size='$TABLE_SIZE', index_size='$INDEX_SIZE', end_time=now() where test=$TEST"
 
 if [ "$OSDATA" -eq "1" ]; then
   # The PIDs we have will be the process ID of the Python timed-os-stats

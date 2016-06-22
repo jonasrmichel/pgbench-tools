@@ -1,6 +1,7 @@
 SELECT
   set,scale,
-  pg_size_pretty(avg(dbsize)::int8) AS db_size,
+  pg_size_pretty(avg(table_size)::int8) AS table_size,
+  pg_size_pretty(avg(index_size)::int8) AS index_size,
   clients,
   rate_limit,
   round(avg(tps)) as tps,
