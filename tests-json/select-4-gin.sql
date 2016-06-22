@@ -1,1 +1,1 @@
-SELECT data FROM :json_table WHERE data @> '{"type": "service"}';
+SELECT data FROM :json_table WHERE data @> '{"limits": { "voice": { "units": "minutes" } } }';
