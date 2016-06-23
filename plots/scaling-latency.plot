@@ -12,6 +12,6 @@ set y2tics
 set y2tics autofreq
 
 plot \
-  "scaling-latency.txt" using 1:4 axis x1y1 title 'TPS' with linespoints,\
+  "scaling-latency.txt" using 1:4 axis x1y1 title 'Latency' with linespoints,\
   "scaling-latency.txt" using 1:2 axis x1y2 title 'Table Size' with linespoints,\
   "scaling-latency.txt" using 1:3 axis x1y2 title 'Index Size' with linespoints
