@@ -39,33 +39,33 @@ if [ -z $GNUPLOT ] || [ ! -x $GNUPLOT ]; then
   echo "gnuplot not found, skipping webreport charts generation"
 else
   # Produce combined transactions/sec reports, averaged across all test sets
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(avg(tps)) as tps from tests group by scale order by scale" > scaling-tps.txt
+  $RESULTPSQL -At -F" " -c "select scale,(avg(table_size) / (1024 * 1024)) as table_size,(avg(index_size) / (1024 * 1024)) as index_size,(avg(tps)) as tps from tests group by scale order by scale" > scaling-tps.txt
   gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
   mv scaling-tps.png $BENCHMARK_RESULTSDIR/
   rm scaling-tps.txt
 
-  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests group by clients order by clients" > clients-tps.txt
+  $RESULTPSQL -At -F" " -c "select clients,(avg(tps)) as tps from tests group by clients order by clients" > clients-tps.txt
   gnuplot plots/clients-tps.plot 2>&1 | grep -v "Warning: empty"
   mv clients-tps.png $BENCHMARK_RESULTSDIR/
   rm clients-tps.txt
 
-  $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d-tps.txt
+  $RESULTPSQL -At -F" " -c "select scale,clients,(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d-tps.txt
   gnuplot plots/3d-tps.plot 2>&1 | grep -v "Warning: empty"
   mv 3d-tps.png $BENCHMARK_RESULTSDIR/
   rm 3d-tps.txt
 
   # Produce combined latency reports, averaged across all test sets
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale order by scale" > scaling-latency.txt
+  $RESULTPSQL -At -F" " -c "select scale,(avg(table_size) / (1024 * 1024)) as table_size,(avg(index_size) / (1024 * 1024)) as index_size,(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale order by scale" > scaling-latency.txt
   gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
   mv scaling-latency.png $BENCHMARK_RESULTSDIR/
   rm scaling-latency.txt
 
-  $RESULTPSQL -At -F" " -c "select clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by clients order by clients" > clients-latency.txt
+  $RESULTPSQL -At -F" " -c "select clients,(1000*avg(avg_latency))/1000 as avg_latency from tests group by clients order by clients" > clients-latency.txt
   gnuplot plots/clients-latency.plot 2>&1 | grep -v "Warning: empty"
   mv clients-latency.png $BENCHMARK_RESULTSDIR/
   rm clients-latency.txt
 
-  $RESULTPSQL -At -F" " -c "select scale,clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale,clients order by scale,clients" > 3d-latency.txt
+  $RESULTPSQL -At -F" " -c "select scale,clients,(1000*avg(avg_latency))/1000 as avg_latency from tests group by scale,clients order by scale,clients" > 3d-latency.txt
   gnuplot plots/3d-latency.plot 2>&1 | grep -v "Warning: empty"
   mv 3d-latency.png $BENCHMARK_RESULTSDIR/
   rm 3d-latency.txt
@@ -112,33 +112,33 @@ for SET in $SETS ; do
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Generate transaction/sec graphs for just this test set
-    $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling-tps.txt
+    $RESULTPSQL -At -F" " -c "select scale,(avg(table_size) / (1024 * 1024)) as table_size,(avg(index_size) / (1024 * 1024)) as index_size,(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling-tps.txt
     gnuplot plots/scaling-tps.plot 2>&1 | grep -v "Warning: empty"
     mv scaling-tps.png $BENCHMARK_RESULTSDIR/scaling-tps-$SET.png
     mv scaling-tps.txt scaling-tps-$SET.txt
 
-    $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients-tps.txt
+    $RESULTPSQL -At -F" " -c "select clients,(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients-tps.txt
     gnuplot plots/clients-tps.plot 2>&1 | grep -v "Warning: empty"
     mv clients-tps.png $BENCHMARK_RESULTSDIR/clients-tps-$SET.png
     mv clients-tps.txt clients-tps-$SET.txt
 
-    $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-tps.txt
+    $RESULTPSQL -At -F" " -c "select scale,clients,(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-tps.txt
     gnuplot plots/3d-tps.plot 2>&1 | grep -v "Warning: empty"
     mv 3d-tps.png $BENCHMARK_RESULTSDIR/3d-tps-$SET.png
     rm 3d-tps.txt
 
     # Generate latency graphs for just this test set
-    $RESULTPSQL -At -F" " -c "select scale,round(avg(table_size) / (1024 * 1024)) as table_size,round(avg(index_size) / (1024 * 1024)) as index_size,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
+    $RESULTPSQL -At -F" " -c "select scale,(avg(table_size) / (1024 * 1024)) as table_size,(avg(index_size) / (1024 * 1024)) as index_size,(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
     gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
     mv scaling-latency.png $BENCHMARK_RESULTSDIR/scaling-latency-$SET.png
     mv scaling-latency.txt scaling-latency-$SET.txt
 
-    $RESULTPSQL -At -F" " -c "select clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by clients order by clients" > clients-latency.txt
+    $RESULTPSQL -At -F" " -c "select clients,(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by clients order by clients" > clients-latency.txt
     gnuplot plots/clients-latency.plot 2>&1 | grep -v "Warning: empty"
     mv clients-latency.png $BENCHMARK_RESULTSDIR/clients-latency-$SET.png
     mv clients-latency.txt clients-latency-$SET.txt
 
-    $RESULTPSQL -At -F" " -c "select scale,clients,round(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-latency.txt
+    $RESULTPSQL -At -F" " -c "select scale,clients,(1000*avg(avg_latency))/1000 as avg_latency from tests where set='$SET' group by scale,clients order by scale,clients" > 3d-latency.txt
     gnuplot plots/3d-latency.plot 2>&1 | grep -v "Warning: empty"
     mv 3d-latency.png $BENCHMARK_RESULTSDIR/3d-latency-$SET.png
     rm 3d-latency.txt
@@ -155,17 +155,17 @@ for SET in $SETS ; do
 
   # Summarize the test set
   echo Averages for test set $SET by scale: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,scale,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale order by set,scale;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,scale,(avg(tps)) as tps,(1000*avg(avg_latency))/1000 as avg_latency,(1000*avg(percentile_90_latency))/1000 as \"90%<\",(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale order by set,scale;" >> $OUTFILE
 
   echo Averages for test set $SET by clients: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,clients order by set,clients;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,clients,(avg(tps)) as tps,(1000*avg(avg_latency))/1000 as avg_latency,(1000*avg(percentile_90_latency))/1000 as \"90%<\",(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,clients order by set,clients;" >> $OUTFILE
 
   echo Averages for test set $SET by scale, client, and rate limit: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,scale,clients,rate_limit,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale,clients,rate_limit order by set,scale,clients,rate_limit;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,scale,clients,rate_limit,(avg(tps)) as tps,(1000*avg(avg_latency))/1000 as avg_latency,(1000*avg(percentile_90_latency))/1000 as \"90%<\",(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale,clients,rate_limit order by set,scale,clients,rate_limit;" >> $OUTFILE
 
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
-  $RESULTPSQL -H -c "select set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,scale,clients,rate_limit,round(tps) as tps,max_latency, checkpoints_timed+checkpoints_req as chkpts,buffers_checkpoint as buf_check,buffers_clean as buf_clean,buffers_backend as buf_backend,buffers_alloc as buf_alloc, maxwritten_clean as max_clean, buffers_backend_fsync as backend_sync, max_dirty, wal_written,cleanup from test_bgwriter right join tests on tests.test=test_bgwriter.test where tests.set='$SET' order by set,scale,clients,rate_limit,tests.test;" > temp.txt
+  $RESULTPSQL -H -c "select set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,scale,clients,rate_limit,(tps) as tps,max_latency, checkpoints_timed+checkpoints_req as chkpts,buffers_checkpoint as buf_check,buffers_clean as buf_clean,buffers_backend as buf_backend,buffers_alloc as buf_alloc, maxwritten_clean as max_clean, buffers_backend_fsync as backend_sync, max_dirty, wal_written,cleanup from test_bgwriter right join tests on tests.test=test_bgwriter.test where tests.set='$SET' order by set,scale,clients,rate_limit,tests.test;" > temp.txt
 
   # Now we need to fix lines like this
   # <td align="left">&lt;a href=&quot;results/201/&quot;&gt;201&lt;/a&gt;</td>
