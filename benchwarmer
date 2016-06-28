@@ -252,7 +252,7 @@ fi
 
 # Run the main pgbench test
 cd $BENCHMARK_RESULTSDIR/$TEST
-echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
+echo Script $SCRIPT executing on table $TEST_JSON_TABLE for $CLIENTS concurrent users... 1>&2
 $PGBENCHBIN -f $TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -D json_table=$TEST_JSON_TABLE -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P

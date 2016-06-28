@@ -19,15 +19,15 @@ SCRIPT_PLAIN_SUFFIX="-plain.sql"
 SCRIPT_GIN_SUFFIX="-gin.sql"
 
 SCRIPT="$JSON_INSERT_FILE"
-SCALES="1 10 100 1000 10000 100000 1000000"
-SETCLIENTS="1 2 4 8"
+SCALES="1 10 100 1000"
+SETCLIENTS="1 2 4 8 16"
 SETTIMES=1
 
 # RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
 # Setting a time instead of a transaction account is only available
 # in 8.4 and later.
-#RUNTIME=""
-TOTTRANS=10
+RUNTIME="10"
+#TOTTRANS=10
 
 # Use a transaction count instead for 8.3 or earlier
 #RUNTIME=""

@@ -61,4 +61,4 @@ JSON_INSERT_FILE="insert-bulk.sql"
 JSON_INSERT_PATH="$TESTDIR/$JSON_INSERT_FILE"
 
 # Benchmark tests to run.
-BENCHMARKS="insert select update"
+BENCHMARKS="insert-bulk insert select select-fixed update"

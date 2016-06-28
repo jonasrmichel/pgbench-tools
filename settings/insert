@@ -18,7 +18,7 @@ SCRIPT_GIN_SUFFIX="-gin.sql"
 
 SCRIPT="insert.sql"
 SCALES="1"
-SETCLIENTS="1 2 4 8"
+SETCLIENTS="1 2 4 8 16"
 SETTIMES=1
 
 # RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.

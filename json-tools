@@ -183,6 +183,8 @@ function pg_create_gin_index_collection ()
    typeset -r F_PGPASSWORD="$5"
    typeset -r F_TABLE="$6"
 
+   process_log "creating default GIN index on postgreSQL collections."
+
    pg_create_index_collection "${F_PGHOST}" \
                               "${F_PGPORT}" \
                               "${F_DBNAME}" \
@@ -204,6 +206,8 @@ function pg_create_jpo_index_collection ()
    typeset -r F_PGUSER="$4"
    typeset -r F_PGPASSWORD="$5"
    typeset -r F_TABLE="$6"
+
+   process_log "creating json_path_ops GIN index on postgreSQL collections."
 
    pg_create_index_collection "${F_PGHOST}" \
                               "${F_PGPORT}" \
