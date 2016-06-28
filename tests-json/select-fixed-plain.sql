@@ -1,0 +1,1 @@
+SELECT data FROM :json_table WHERE (data->'limits'->'voice'->>'units') = 'minutes' limit 10;
