@@ -1,5 +1,5 @@
-postgres-tests
-==============
+pgbench-tools
+=============
 
 This testing framework is a modification of Greg Smith's 
 [pgbench-tools](https://github.com/gregs1104/pgbench-tools) with some
