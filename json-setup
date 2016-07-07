@@ -58,7 +58,9 @@ function generate_benchmark_data ()
   local SCALE="$2"
   pg_json_insert_maker "${TABLE}"                    \
                        "${SCALE}"                    \
-                       "${JSON_INSERT_PATH}"
+                       "${JSON_INSERT_PATH}"         \
+                       "${JSON_SNOWFLAKE_VALUE}"     \
+                       "${JSON_SNOWFLAKE_ROWS}"
 }
 
 function insert_benchmark_data ()

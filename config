@@ -60,5 +60,9 @@ TEST_JSON_TABLES="$TABLE_JSON_PLAIN $TABLE_JSON_GIN $TABLE_JSON_JPO"
 JSON_INSERT_FILE="insert-bulk.sql"
 JSON_INSERT_PATH="$TESTDIR/$JSON_INSERT_FILE"
 
+# Configure JSON snowflake data
+JSON_SNOWFLAKE_VALUE="snowflake"
+JSON_SNOWFLAKE_ROWS=1
+
 # Benchmark tests to run.
-BENCHMARKS="insert-bulk insert select select-fixed update"
+BENCHMARKS="insert insert-bulk select select-fixed select-snowflake tpc-b update update-snowflake"
